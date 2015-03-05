@@ -69,3 +69,6 @@ def kmeans(points, k, min_diff):
             break
 
     return clusters
+
+if __name__ == "__main__":
+

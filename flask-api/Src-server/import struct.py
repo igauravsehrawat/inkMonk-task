@@ -3,7 +3,7 @@ import Image
 import scipy
 import scipy.misc
 import scipy.cluster
-import request
+import requests
 
 
 __all__ = ["ColorExtractor"]
@@ -14,7 +14,7 @@ def ColorExtractor(given_url):
         'User-agent':
         'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1985.143 Safar/537.36'
         }
-    image_content = request.get(given_url, headers = req_headers)
+    image_content = requests.get(given_url, headers = req_headers)
     NUM_CLUSTERS = 12
     print 'reading image'
     im = Image.open(image_content)
@@ -48,4 +48,4 @@ def ColorExtractor(given_url):
 
 
 if __name__ == "__main__":
-    ColorExtractor()
+    ColorExtractor("http://img3.wikia.nocookie.net/__cb20100520131746/logopedia/images/5/5c/Google_logo.png")
