@@ -8,7 +8,7 @@ import scipy
 import scipy.misc
 import scipy.cluster
 from sqlalchemy import create_engine
-
+from sqlalchemy import Table, Column, Integer, String, MetaData, ForeignKey, Sequence, select
 
 engine = create_engine('sqlite:///:memory:', echo=True)
 
@@ -16,16 +16,21 @@ engine = create_engine('sqlite:///:memory:', echo=True)
 app = Flask(__name__)
 api = restful.Api(app)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///images_hexcodes.db'
-db = SQLAlchemy(app)
+#db related code
 
-class ImageRequested(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    count = db.Column(db.Integer)
-    url_given = db.Column(db.Text)
-    hexcodes = db.Column(db.Text)
+metadata = MetaData()
+image_hexcodes = Table('image_hexcodes', metadata,
+                    Column('id', Integer, Sequence('user_id_seq'), primary_key=True),
+                    Column('count', Integer),
+                    Column('url_given', String),
+                    Column('hexcodes', String)
+                    )
+metadata.create_all(engine)
+ins = image_hexcodes.insert()
 
-db.create_all()
+##################
+def root():
+  return app.send_static_file('frontend.html')
 
 
 class ProcessImage(restful.Resource):
@@ -40,13 +45,39 @@ class ProcessImage(restful.Resource):
     def post(self, url_id):
         print url_id
         all_hex_codes = [ColorExtractor(request.form['data'])]
-        u = ImageRequested(0,url_id,all_hex_codes)
-        db.add(u)
+
+        metadata = MetaData()
+        image_hexcodes = Table('image_hexcodes', metadata,
+                            Column('id', Integer, Sequence('user_id_seq'), primary_key=True),
+                            Column('count', Integer),
+                            Column('url_given', String),
+                            Column('hexcodes', String)
+                            )
+        metadata.create_all(engine)
+        ins = image_hexcodes.insert()
+        conn = engine.connect()
+
+        s = select([image_hexcodes])
+        checking_something = conn.execute(s)
+
+        for row in checking_something:
+            print "print row subset 4"
+            print row[4]
+            if row['hexcodes']==request.form['data']:
+                print "we found it"
+            else:
+                conn.execute(ins,count=0, url_given = request.form['data'], hexcodes=str(all_hex_codes))
+
+
+
+
         # all_hex_codes = None
         return {'response': all_hex_codes}
 
 #lets do in db , two ways
-# api.add_resource(ProcessImage, '/')
+@app.route('/')
+
+
 api.add_resource(ProcessImage, '/<string:url_id>')
 
 if __name__ == '__main__':
